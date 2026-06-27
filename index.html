@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Chevron Consult | University LMS</title>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Supabase config: set these meta tags with your project URL and anon key to enable backend -->
+    <meta name="supabase-url" content="">
+    <meta name="supabase-key" content="">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f4f7fc;
+            color: #1e2a3e;
+            line-height: 1.5;
+        }
+
+        /* dark mode */
+        body.dark {
+            background: #121826;
+            color: #eef2ff;
+        }
+
+        body.dark .card, body.dark .stat-card, body.dark .top-nav, body.dark .footer, 
+        body.dark .modal-content, body.dark .form-control, body.dark table, 
+        body.dark .search-input {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-color: #334155;
+        }
+
+        body.dark .table th {
+            background: #0f172a;
+            color: #cbd5e1;
+        }
+
+        /* Layout */
+        .top-nav {
+            background: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 0 2rem;
+            backdrop-filter: blur(2px);
+        }
+
+        /* Sidebar layout (dashboard style) */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 260px;
+            background: linear-gradient(180deg,#0f172a,#0b2540);
+            color: #e6eefc;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 1100;
+            box-shadow: 2px 0 8px rgba(2,6,23,0.2);
+        }
+
+        .sidebar .brand { display:flex; align-items:center; gap:10px; }
+        .sidebar h3 { margin:0; font-size:1.1rem; font-weight:700; }
+        .sidebar .user-pill { background: rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; gap:10px; align-items:center; }
+        .sidebar nav { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+        .sidebar a { color: #cfe6ff; text-decoration:none; padding:10px 12px; border-radius:8px; display:flex; gap:10px; align-items:center; font-weight:600; }
+        .sidebar a.active, .sidebar a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+
+        /* Adjust main container to sit to the right of sidebar */
+        .main-container { max-width: 1100px; margin: 90px auto 30px; padding: 0 24px; margin-left: 300px; }
+
+        /* Two-column dashboard layout */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items:start; }
+
+        /* Top stats styled like cards */
+        .stats-row { display:grid; grid-template-columns: repeat(4,1fr); gap:12px; margin-bottom:12px; }
+        .stat-card { background: linear-gradient(180deg,#fff,#f8fbff); border-radius:12px; padding:18px; text-align:left; box-shadow: none; border: 1px solid rgba(30,60,114,0.06); }
+        .stat-card .label { color:#64748b; font-size:0.9rem; }
+        .stat-card .value { font-size:1.8rem; font-weight:800; color:#0f172a; }
+
+        /* Announcements list style */
+        .ann-list .ann-item { border-left:6px solid #f97316; background:#fff; padding:14px; border-radius:10px; margin-bottom:12px; }
+        .ann-item .meta { color:#64748b; font-size:0.85rem; margin-top:8px; }
+
+        /* Upcoming deadlines list */
+        .deadlines { background:#fff; border-radius:12px; padding:12px; }
+        .deadline-item { display:flex; justify-content:space-between; padding:10px 6px; border-bottom:1px dashed #eef2ff; }
+
+        @media (max-width: 980px) {
+            .sidebar { display:none; }
+            .main-container { margin-left: 0; }
+            .stats-row { grid-template-columns: repeat(2,1fr); }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo h2 {
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        body.dark .logo h2 {
+            background: linear-gradient(135deg, #90cdf4, #63b3ed);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #1e293b;
+            font-weight: 500;
+            padding: 0.5rem 0.8rem;
+            border-radius: 40px;
+            transition: all 0.2s;
+        }
+        body.dark .nav-links a { color: #cbd5e1; }
+        .nav-links a:hover, .nav-links a.active {
+            background: #1e3c72;
+            color: white;
+        }
+        body.dark .nav-links a:hover { background: #2d4a8c; }
+
+        .menu-icon {
+            display: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+
+        /* main container */
+        .main-container {
+            max-width: 1400px;
+            margin: 90px auto 30px;
+            padding: 0 24px;
+        }
+
+        /* cards */
+        .card {
+            background: white;
+            border-radius: 28px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 1.8rem;
+        }
+
+        .lecturer-card {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .lecturer-photo {
+            width: 100%;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 24px;
+            border: 1px solid rgba(30,42,60,0.12);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+        }
+
+        .lecturer-profile-list {
+            list-style: none;
+            padding-left: 0;
+            margin: 0.5rem 0 0 0;
+            display: grid;
+            gap: 0.35rem;
+        }
+
+        .lecturer-profile-list li::before {
+            content: '✔️';
+            margin-right: 0.5rem;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 24px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.03);
+            border: 1px solid #eef2ff;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1e3c72;
+        }
+        body.dark .stat-number { color: #60a5fa; }
+
+        /* buttons */
+        .btn {
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #eef2ff;
+            color: #1e3c72;
+        }
+        .btn-primary { background: #1e3c72; color: white; }
+        .btn-primary:hover { background: #0f2b4f; transform: translateY(-2px);}
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-outline { border: 1px solid #1e3c72; background: transparent; }
+
+        /* forms */
+        .form-group { margin-bottom: 1.2rem; }
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 60px;
+            border: 1px solid #cbd5e1;
+            font-family: inherit;
+        }
+
+        .search-input { width: 100%; max-width: 320px; border-radius: 40px; padding: 10px 18px; }
+
+        /* responsive nav */
+        @media (max-width: 980px) {
+            .nav-links {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                align-items: center;
+                padding: 1rem 0;
+            }
+            .nav-links.show {
+                display: flex;
+            }
+            .menu-icon {
+                display: block;
+            }
+            .top-nav { padding: 0.8rem 1rem; }
+        }
+
+        /* modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: white;
+            max-width: 500px;
+            width: 90%;
+            border-radius: 32px;
+            padding: 1.8rem;
+        }
+
+        /* badges */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .badge-upcoming { background: #e0f2fe; color: #0369a1; }
+        .badge-due { background: #fef9c3; color: #854d0e; }
+        .badge-expired { background: #fee2e2; color: #b91c1c; }
+
+        .footer {
+            background: white;
+            border-radius: 24px;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        .social-icons { display:inline-flex; gap:12px; align-items:center; margin-top:8px; }
+        .social-icon { width:44px; height:44px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:white; background:#1e293b; text-decoration:none; font-size:1.1rem; }
+        .social-icon.twitter { background: #1da1f2; }
+        .social-icon.instagram { background: linear-gradient(45deg,#feda75,#d62976,#962fbf,#4f5bd5); }
+        .social-icon.linkedin { background: #0a66c2; }
+        .social-icon.facebook { background: #1877f2; }
+
+        .dark-toggle {
+            background: #1e293b;
+            color: white;
+            border-radius: 30px;
+            padding: 6px 14px;
+            cursor: pointer;
+        }
+
+        /* misc */
+        .material-grid, .assignment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+            gap: 1.5rem;
+        }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+        i { margin-right: 6px; }
+        hr { margin: 1rem 0; }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <div class="nav-container">
+            <div class="logo"><h2><i class="fas fa-chalkboard-teacher"></i> Chevron Consult</h2></div>
+            <div class="menu-icon" id="menuIcon"><i class="fas fa-bars"></i></div>
+            <div class="nav-links" id="navLinks">
+                <a href="#" data-view="home"><i class="fas fa-home"></i> Home</a>
+                <a href="#" data-view="materials"><i class="fas fa-book"></i> Materials</a>
+                <a href="#" data-view="services"><i class="fas fa-concierge-bell"></i> Services</a>
+                <a href="#" data-view="assignments"><i class="fas fa-tasks"></i> Assignments</a>
+                <a href="#" data-view="announcements"><i class="fas fa-bullhorn"></i> Announcements</a>
+                <a href="#" data-view="live"><i class="fas fa-video"></i> Live Classes</a>
+                <a href="#" data-view="studentDashboard" id="studentDashNav"><i class="fas fa-user-graduate"></i> Student Dashboard</a>
+                <a href="#" data-view="adminDashboard" id="adminPanelNav"><i class="fas fa-user-cog"></i> Admin Panel</a>
+                <a href="#" id="studentLoginBtn" class="login-link"><i class="fas fa-sign-in-alt"></i> Student Login</a>
+                <a href="#" id="adminLoginBtn" class="login-link"><i class="fas fa-lock"></i> Admin Login</a>
+                <a href="#" id="logoutBtn" style="display:none;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                <button id="darkModeToggle" class="dark-toggle"><i class="fas fa-moon"></i> Dark</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar (dashboard style) -->
+    <aside class="sidebar" id="appSidebar">
+        <div class="brand"><i class="fas fa-graduation-cap" style="font-size:1.2rem;color:#60a5fa"></i><h3>Chevron Consult</h3></div>
+        <div class="user-pill"><div style="width:36px;height:36px;border-radius:50%;background:#1e293b;color:#fff;display:flex;align-items:center;justify-content:center;">G</div><div><div style="font-weight:700">Guest</div><div style="font-size:0.85rem;color:#cfe6ff">Student</div></div></div>
+        <nav>
+            <a href="#" data-view="home" class="active"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="#" data-view="services"><i class="fas fa-concierge-bell"></i> Services</a>
+            <a href="#" data-view="materials"><i class="fas fa-book"></i> Materials</a>
+            <a href="#" data-view="assignments"><i class="fas fa-tasks"></i> Assignments</a>
+            <a href="#" data-view="live"><i class="fas fa-video"></i> Live Classes</a>
+            <a href="#" data-view="announcements"><i class="fas fa-bullhorn"></i> Announcements</a>
+            <a href="#" id="sidebarStudentLogin" class="login-link"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+        </nav>
+        <div style="margin-top:auto;display:flex;gap:8px;flex-direction:column;">
+            <button id="sidebarTheme" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:#cfe6ff">Theme</button>
+            <button id="sidebarLogout" class="btn btn-outline" style="background:transparent;color:#cfe6ff;border-color:rgba(255,255,255,0.06);display:none">Logout</button>
+        </div>
+    </aside>
+
+    <div class="main-container" id="appContent">
+        <!-- dynamic views injected -->
+        <div class="dashboard-grid">
+            <div id="viewContainer">Loading...</div>
+            <aside id="rightPanel">
+                <div class="card">
+                    <h3>📢 Announcements</h3>
+                    <div id="rightAnnList" class="ann-list"></div>
+                    <div style="text-align:right;margin-top:8px;"><a href="#" data-view="announcements">View All</a></div>
+                </div>
+                <div class="card">
+                    <h3>⏳ Upcoming Deadlines</h3>
+                    <div id="rightDeadlines" class="deadlines"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+        <div class="footer">
+            <div class="nav-container" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                <div style="text-align:left;"><h3 style="margin:0">Chevron Consult</h3><div style="color:#64748b;font-size:0.95rem">Your Partner in Academic and Professional Excellence</div></div>
+                <div style="text-align:right;">
+                    <div class="social-icons">
+                        <a href="https://x.com/sammykibe" target="_blank" class="social-icon twitter" id="twitterLink" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="https://www.linkedin.com/in/sammy-kibe-a1888b242" target="_blank" class="social-icon linkedin" id="linkedinLink" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="https://www.facebook.com/share/1BTHEgDRq5/" target="_blank" class="social-icon facebook" id="facebookLink" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+    <div id="studentLoginModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-graduation-cap"></i> Student Login</h3>
+            <form id="studentLoginForm">
+                <div class="form-group"><label>Full Name</label><input type="text" id="studentName" class="form-control" required></div>
+                <div class="form-group"><label>Email Address</label><input type="email" id="studentEmail" class="form-control" required></div>
+                <button type="submit" class="btn btn-primary">Login as Student</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="adminLoginModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-shield-alt"></i> Admin Login</h3>
+            <form id="adminLoginForm">
+                <div class="form-group"><label>Username</label><input type="text" id="adminUsername" class="form-control" required></div>
+                <div class="form-group"><label>Password</label><div style="display:flex; gap:6px;"><input type="password" id="adminPassword" class="form-control" required><button type="button" id="togglePass" class="btn">Show</button></div></div>
+                <div class="form-group"><label><input type="checkbox" id="rememberAdmin"> Remember me</label></div>
+                <button type="submit" class="btn btn-primary">Admin Login</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ---------- DATA & STORAGE ----------
+        // Supabase client (optional). Provide meta tags in the head to enable.
+        const SUPABASE_URL = document.querySelector('meta[name="supabase-url"]')?.content || '';
+        const SUPABASE_ANON_KEY = document.querySelector('meta[name="supabase-key"]')?.content || '';
+        let supabaseClient = null;
+        function initSupabase() {
+            if(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase) {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase client initialized');
+                syncFromSupabase();
+            }
+        }
+        function isSupabaseEnabled(){ return !!supabaseClient; }
+
+        // Social links storage
+        const DEFAULT_SOCIAL_LINKS = {
+            twitter: 'https://x.com/sammykibe',
+            instagram: 'https://www.instagram.com/',
+            linkedin: 'https://www.linkedin.com/in/sammy-kibe-a1888b242',
+            facebook: 'https://www.facebook.com/share/1BTHEgDRq5/'
+        };
+
+        function getSocialLinks(){
+            try {
+                const stored = JSON.parse(localStorage.getItem('lms_social_links') || 'null');
+                return { ...DEFAULT_SOCIAL_LINKS, ...(stored || {}) };
+            } catch (e) {
+                return { ...DEFAULT_SOCIAL_LINKS };
+            }
+        }
+
+        function setSocialLinks(obj){
+            const nextLinks = { ...DEFAULT_SOCIAL_LINKS, ...(obj || {}) };
+            localStorage.setItem('lms_social_links', JSON.stringify(nextLinks));
+            applySocialLinks();
+        }
+        function applySocialLinks(){ const s = getSocialLinks(); document.getElementById('twitterLink').href = s.twitter || '#'; document.getElementById('instagramLink').href = s.instagram || '#'; document.getElementById('linkedinLink').href = s.linkedin || '#'; document.getElementById('facebookLink').href = s.facebook || '#'; }
+
+        // Sync remote data into localStorage so the UI remains mostly unchanged.
+        async function syncFromSupabase() {
+            if(!isSupabaseEnabled()) return;
+            try {
+                let { data: materials, error: mErr } = await supabaseClient.from('materials').select('*');
+                if(!mErr && materials) localStorage.setItem('lms_materials', JSON.stringify(materials));
+                let { data: assignments, error: aErr } = await supabaseClient.from('assignments').select('*');
+                if(!aErr && assignments) localStorage.setItem('lms_assignments', JSON.stringify(assignments));
+                let { data: announcements, error: anErr } = await supabaseClient.from('announcements').select('*');
+                if(!anErr && announcements) localStorage.setItem('lms_announcements', JSON.stringify(announcements));
+                let { data: liveclasses, error: lErr } = await supabaseClient.from('liveclasses').select('*');
+                if(!lErr && liveclasses) localStorage.setItem('lms_liveclasses', JSON.stringify(liveclasses));
+                let { data: students, error: sErr } = await supabaseClient.from('students').select('*');
+                if(!sErr && students) localStorage.setItem('lms_students', JSON.stringify(students));
+                let { data: submissions, error: subErr } = await supabaseClient.from('submissions').select('*');
+                if(!subErr && submissions) localStorage.setItem('lms_submissions', JSON.stringify(submissions));
+                let { data: socialLinks, error: slErr } = await supabaseClient.from('social_links').select('*');
+                if(!slErr && socialLinks && socialLinks.length) { localStorage.setItem('lms_social_links', JSON.stringify(socialLinks[0])); }
+            } catch(err) { console.error('Supabase sync error', err); }
+        }
+
+        let currentUser = null; // {role, name, email}
+        let currentView = "home";
+
+        // Default demo data
+        function initData() {
+            if(!localStorage.getItem('lms_materials')) {
+                localStorage.setItem('lms_materials', JSON.stringify([
+                    { id: 'm1', title: 'Introduction to AI', uploadDate: '2025-02-10', type: 'pdf', fileUrl: '#' },
+                    { id: 'm2', title: 'Data Structures Lecture', uploadDate: '2025-02-15', type: 'ppt', fileUrl: '#' }
+                ]));
+            }
+            if(!localStorage.getItem('lms_assignments')) {
+                localStorage.setItem('lms_assignments', JSON.stringify([
+                    { id: 'a1', title: 'Research Paper', description: 'Write about ML trends', dueDate: '2026-06-10', fileUrl: '#' },
+                    { id: 'a2', title: 'Project Proposal', description: 'Group project outline', dueDate: '2026-05-25', fileUrl: '#' }
+                ]));
+            }
+            if(!localStorage.getItem('lms_announcements')) {
+                localStorage.setItem('lms_announcements', JSON.stringify([
+                    { id: 'an1', title: 'Welcome Back!', content: 'Semester starts soon.', date: '2026-05-01' },
+                    { id: 'an2', title: 'Office Hours', content: 'Every Wednesday 2-4 PM', date: '2026-05-05' }
+                ]));
+            }
+            if(!localStorage.getItem('lms_liveclasses')) {
+                localStorage.setItem('lms_liveclasses', JSON.stringify([
+                    { id: 'l1', title: 'Web Dev Workshop', date: '2026-06-15', time: '14:00', duration: '90', link: '#' },
+                    { id: 'l2', title: 'Database Design', date: '2026-06-18', time: '10:00', duration: '60', link: '#' }
+                ]));
+            }
+            if(!localStorage.getItem('lms_students')) {
+                localStorage.setItem('lms_students', JSON.stringify([
+                    { id: 's1', fullName: 'Jane Doe', email: 'jane@university.com', regDate: '2026-02-01' }
+                ]));
+            }
+            if(!localStorage.getItem('lms_submissions')) {
+                localStorage.setItem('lms_submissions', JSON.stringify([
+                    // { id, studentName, studentEmail, title, description, fileUrl, date, status }
+                ]));
+            }
+            if(!localStorage.getItem('lms_tutoring_requests')) {
+                localStorage.setItem('lms_tutoring_requests', JSON.stringify([
+                    // { id, studentName, studentEmail, subject, preferredDate, preferredTime, message, status: 'pending'|'approved'|'rejected'|'completed', tutorAssigned, meetingLink, dateRequested }
+                ]));
+            }
+            if(!localStorage.getItem('lms_social_links')) {
+                localStorage.setItem('lms_social_links', JSON.stringify(DEFAULT_SOCIAL_LINKS));
+            }
+        }
+        initData();
+        initSupabase();
+
+        function getMaterials() { return JSON.parse(localStorage.getItem('lms_materials')); }
+        function setMaterials(data) { localStorage.setItem('lms_materials', JSON.stringify(data)); }
+        function getAssignments() { return JSON.parse(localStorage.getItem('lms_assignments')); }
+        function setAssignments(data) { localStorage.setItem('lms_assignments', JSON.stringify(data)); }
+        function getAnnouncements() { return JSON.parse(localStorage.getItem('lms_announcements')); }
+        function setAnnouncements(data) { localStorage.setItem('lms_announcements', JSON.stringify(data)); }
+        function getLiveClasses() { return JSON.parse(localStorage.getItem('lms_liveclasses')); }
+        function setLiveClasses(data) { localStorage.setItem('lms_liveclasses', JSON.stringify(data)); }
+        function getStudents() { return JSON.parse(localStorage.getItem('lms_students')); }
+        function setStudents(data) { localStorage.setItem('lms_students', JSON.stringify(data)); }
+        function getSubmissions() { return JSON.parse(localStorage.getItem('lms_submissions')); }
+        function setSubmissions(data) { localStorage.setItem('lms_submissions', JSON.stringify(data)); }
+
+        function getTutoringRequests(){ return JSON.parse(localStorage.getItem('lms_tutoring_requests') || '[]'); }
+        function setTutoringRequests(data){ localStorage.setItem('lms_tutoring_requests', JSON.stringify(data)); }
+
+        // Helper: add student on login
+        function registerStudent(name, email) {
+            let students = getStudents();
+            if(!students.find(s => s.email === email)) {
+                const newStudent = { id: Date.now().toString(), fullName: name, email: email, regDate: new Date().toISOString().slice(0,10) };
+                students.push(newStudent);
+                setStudents(students);
+                // push to Supabase if enabled
+                if(isSupabaseEnabled()) supabaseClient.from('students').insert(newStudent).then(({error})=>{ if(error) console.error(error); else syncFromSupabase(); });
+            }
+        }
+
+        // RENDER helpers
+        function renderHome() {
+            let materials = getMaterials(), assignments = getAssignments(), announcements = getAnnouncements(), live = getLiveClasses();
+            return `
+                <div class="hero">
+                    <div class="card" style="text-align:center; background: linear-gradient(120deg,#eef2ff,white);">
+                        <h1>Welcome to Chevron Consult</h1>
+                        <p>Excellence in digital education</p>
+                        <div class="flex-between" style="justify-content:center; gap:15px; margin-top:15px;">
+                            <button class="btn btn-primary" id="quickStudentLogin"><i class="fas fa-user-plus"></i> Student Login</button>
+                            <button class="btn btn-outline" id="quickAdminLogin"><i class="fas fa-lock"></i> Admin Access</button>
+                        </div>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-card"><div class="stat-number">${materials.length}</div><div>Learning Materials</div></div>
+                        <div class="stat-card"><div class="stat-number">${assignments.length}</div><div>Assignments</div></div>
+                        <div class="stat-card"><div class="stat-number">${announcements.length}</div><div>Announcements</div></div>
+                        <div class="stat-card"><div class="stat-number">${live.length}</div><div>Upcoming Live Classes</div></div>
+                    </div>
+                    <div class="card lecturer-card">
+                        <div>
+                            <img src="kibe.jpeg" alt="Mr Kibe" class="lecturer-photo" onerror="this.src='https://via.placeholder.com/110x110?text=Lecturer'">
+                        </div>
+                        <div>
+                            <h3><i class="fas fa-chalkboard-user"></i> Lecturer Profile</h3>
+                            <p><strong>Mr Kibe</strong></p>
+                            <p>PhD-Business Administration (Finance), MBA (Finance), BA (Hons), DBM (KIM), CIPS (UK)</p>
+                            <p>I am Mr. Sammy Kibe, a Lecturer, Researcher, and Consultant dedicated to bridging the gap between academic knowledge and practical solutions.</p>
+                            <p>With years of experience in higher education, research, and professional consultancy, I help students, institutions, businesses, and policymakers navigate complex economic, financial, and management challenges through evidence-based insights and innovative thinking.</p>
+                            <p>My work focuses on:</p>
+                            <ul class="lecturer-profile-list">
+                                <li>Teaching and Mentorship</li>
+                                <li>Research and Publications</li>
+                                <li>Economic and Policy Analysis</li>
+                                <li>Business and Financial Consultancy</li>
+                                <li>Training and Capacity Building</li>
+                                <li>AI-Enhanced Learning Solutions</li>
+                            </ul>
+                            <p>Whether you are a student seeking academic guidance, an organization requiring research support, or an institution looking for professional training, I look forward to working with you.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMaterials() {
+            let materials = getMaterials();
+            let search = `<div class="flex-between"><input type="text" id="materialSearch" class="search-input" placeholder="Search by title..."><select id="categoryFilter"><option value="all">All Types</option><option value="pdf">PDF</option><option value="ppt">PPT/PPTX</option><option value="doc">DOC</option></select></div><div id="materialListGrid" class="material-grid" style="margin-top:20px;"></div>`;
+            setTimeout(() => {
+                const filterGrid = () => {
+                    let term = document.getElementById('materialSearch')?.value.toLowerCase() || '';
+                    let cat = document.getElementById('categoryFilter')?.value;
+                    let filtered = materials.filter(m => m.title.toLowerCase().includes(term) && (cat === 'all' || m.type.includes(cat)));
+                    document.getElementById('materialListGrid').innerHTML = filtered.map(m => `<div class="card"><i class="fas fa-file-${m.type === 'pdf' ? 'pdf' : 'powerpoint'}"></i> <strong>${escapeHtml(m.title)}</strong><div class="text-muted">📅 ${m.uploadDate}</div><a href="#" class="btn btn-primary btn-sm download-sim" data-title="${m.title}">Download</a></div>`).join('');
+                };
+                filterGrid();
+                document.getElementById('materialSearch')?.addEventListener('keyup', filterGrid);
+                document.getElementById('categoryFilter')?.addEventListener('change', filterGrid);
+                document.querySelectorAll('.download-sim').forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); alert("Simulated download: " + btn.dataset.title); }));
+            }, 50);
+            return `<div class="card"><h2>📚 Learning Materials</h2>${search}</div>`;
+        }
+
+        function getAssignmentStatus(dueDate) {
+            let today = new Date().toISOString().slice(0,10);
+            if(dueDate < today) return 'Expired';
+            let diffDays = (new Date(dueDate) - new Date()) / (1000*3600*24);
+            if(diffDays <= 2) return 'Due Soon';
+            return 'Upcoming';
+        }
+
+        function renderAssignments() {
+            let assignments = getAssignments();
+            return `<div class="card"><h2>📝 Assignments</h2><input type="text" id="assignSearch" class="search-input" placeholder="Search..."><div id="assignList"></div></div><script>
+                function renderAssignList() {
+                    let asm = ${JSON.stringify(assignments)};
+                    let term = document.getElementById('assignSearch')?.value.toLowerCase() || '';
+                    let filtered = asm.filter(a=>a.title.toLowerCase().includes(term));
+                    document.getElementById('assignList').innerHTML = filtered.map(a=> {
+                        let status = getAssignmentStatus(a.dueDate);
+                        let badgeClass = status === 'Upcoming' ? 'badge-upcoming' : (status === 'Due Soon' ? 'badge-due' : 'badge-expired');
+                        return \`<div class="card"><div class="flex-between"><h3>\${escapeHtml(a.title)}</h3><span class="badge \${badgeClass}">\${status}</span></div><p>\${escapeHtml(a.description)}</p><p>📅 Due: \${a.dueDate}</p><a href="#" class="btn btn-primary download-assign" data-title="\${a.title}">Download Assignment</a></div>\`;
+                    }).join('');
+                    document.querySelectorAll('.download-assign').forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); alert("Simulated assignment download"); }));
+                }
+                renderAssignList();
+                document.getElementById('assignSearch')?.addEventListener('keyup', renderAssignList);
+            <\/script>`;
+        }
+
+        function renderAnnouncements() {
+            let ann = getAnnouncements().sort((a,b)=>new Date(b.date) - new Date(a.date));
+            return `<div class="card"><h2>📢 Announcements</h2><div id="annList">${ann.map(a=>`<div class="card"><h3>${escapeHtml(a.title)}</h3><p>${escapeHtml(a.content)}</p><div class="text-muted">📅 ${a.date}</div></div>`).join('')}</div></div>`;
+        }
+
+        function renderLiveClasses() {
+            let classes = getLiveClasses();
+            return `<div class="card"><h2>🎥 Live Classes</h2><div id="liveGrid" class="material-grid"></div></div><script>
+                let liveClasses = ${JSON.stringify(classes)};
+                function updateTimers() {
+                    let container = document.getElementById('liveGrid');
+                    if(!container) return;
+                    container.innerHTML = liveClasses.map(c => {
+                        let targetDateTime = new Date(c.date + "T" + c.time);
+                        let now = new Date();
+                        let diff = targetDateTime - now;
+                        let countdown = diff > 0 ? \`⏳ \${Math.floor(diff/(1000*3600*24))}d \${Math.floor((diff%(1000*3600*24))/(1000*3600))}h remaining\` : "🔴 Live now / ended";
+                        let platformText = c.platform ? '<div style="color:#475569;font-size:0.95rem;margin-bottom:8px;">🌐 ' + escapeHtml(c.platform) + '</div>' : '';
+                        let linkControl = c.link ? '<a href="#" class="btn btn-primary join-class" data-link="' + c.link + '">Join Class <i class="fas fa-external-link-alt"></i></a>' : '<span style="color:#64748b;">No meeting link</span>';
+                        return '<div class="card"><h3><i class="fas fa-chalkboard"></i> ' + escapeHtml(c.title) + '</h3>' + platformText + '<p>📅 ' + c.date + ' at ' + c.time + '  |  ⏱️ ' + c.duration + ' min</p><p class="countdown-text">' + countdown + '</p>' + linkControl + '</div>';
+                    }).join('');
+                    document.querySelectorAll('.join-class').forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); alert("Joining class: " + btn.dataset.link); }));
+                }
+                updateTimers();
+                setInterval(updateTimers, 1000);
+            <\/script>`;
+        }
+
+            function renderServices() {
+                return `
+                <div class="card"><h2>Introduction</h2>
+                <p><strong>Chevron Consult</strong> is a comprehensive academic support and learning platform serving secondary school students, college students, university students, and professionals seeking skills development.</p>
+
+                <h3>1. Online Teaching and Tutoring Services</h3>
+                <h4>Live Online Classes</h4>
+                <ul>
+                    <li>Economics</li>
+                    <li>Accounting</li>
+                    <li>Finance</li>
+                    <li>Business Studies</li>
+                    <li>Mathematics</li>
+                    <li>Statistics</li>
+                    <li>Entrepreneurship</li>
+                    <li>Research Methods</li>
+                </ul>
+                <h4>One-on-One Tutoring</h4>
+                <ul>
+                    <li>Personalized learning plans</li>
+                    <li>Homework assistance</li>
+                    <li>Exam preparation</li>
+                    <li>Remedial classes</li>
+                </ul>
+                <h4>Group Classes</h4>
+                <ul>
+                    <li>KCSE Revision</li>
+                    <li>CBC Support</li>
+                    <li>Diploma Courses</li>
+                    <li>University Units</li>
+                </ul>
+
+                <h3>2. Assignment and Academic Support</h3>
+                <ul>
+                    <li>Assignment guidance</li>
+                    <li>Research project supervision</li>
+                    <li>Dissertation / thesis coaching</li>
+                    <li>Proposal writing support</li>
+                    <li>Academic presentation coaching</li>
+                    <li>Referencing (APA, Harvard, MLA, Chicago)</li>
+                </ul>
+
+                <h3>3. Research and Statistics Hub</h3>
+                <ul>
+                    <li>Research methodology training</li>
+                    <li>SPSS training</li>
+                    <li>STATA training</li>
+                    <li>EViews training</li>
+                    <li>Data analysis workshops</li>
+                    <li>Academic writing workshops</li>
+                    <li>Publication support</li>
+                </ul>
+
+                <h3>4. Digital Learning Resources</h3>
+                <ul>
+                    <li>Lecture notes</li>
+                    <li>E-books</li>
+                    <li>Revision materials</li>
+                    <li>Past papers</li>
+                    <li>Model answers</li>
+                    <li>Video tutorials</li>
+                    <li>Recorded lessons</li>
+                    <li>Case studies</li>
+                </ul>
+
+                <h3>5. Professional Development Courses</h3>
+                <ul>
+                    <li>Financial Management</li>
+                    <li>Public Finance</li>
+                    <li>Budgeting</li>
+                    <li>Taxation</li>
+                    <li>Leadership</li>
+                    <li>Project Management</li>
+                    <li>Monitoring and Evaluation</li>
+                    <li>Entrepreneurship</li>
+                    <li>Digital Literacy</li>
+                    <li>AI for Educators</li>
+                    <li>AI for Students</li>
+                </ul>
+
+                <h3>6. Career Development Services</h3>
+                <ul>
+                    <li>CV writing</li>
+                    <li>Cover letter writing</li>
+                    <li>Interview coaching</li>
+                    <li>LinkedIn profile optimization</li>
+                    <li>Job search guidance</li>
+                    <li>Career mentorship</li>
+                </ul>
+
+                <h3>7. AI-Powered Learning Support</h3>
+                <ul>
+                    <li>AI Study Assistant</li>
+                    <li>AI Homework Helper</li>
+                    <li>AI Research Assistant</li>
+                    <li>AI Revision Quiz Generator</li>
+                    <li>AI Essay Feedback Tool</li>
+                </ul>
+
+                <h3>8. Student Success Center</h3>
+                <ul>
+                    <li>Study skills training</li>
+                    <li>Time management</li>
+                    <li>Exam techniques</li>
+                    <li>Academic coaching</li>
+                    <li>Goal setting</li>
+                    <li>Productivity workshops</li>
+                </ul>
+
+                <h3>9. Membership Packages</h3>
+                <h4>Basic</h4>
+                <ul><li>Access to notes</li><li>Discussion forum</li></ul>
+                <h4>Premium</h4>
+                <ul><li>Live classes</li><li>Recorded lessons</li><li>Assessments</li><li>Certificates</li></ul>
+                <h4>VIP</h4>
+                <ul><li>Personal tutor</li><li>Research support</li><li>Career mentorship</li></ul>
+
+                <h3>10. Corporate and Institutional Training</h3>
+                <p>Offering training to schools, colleges, universities, NGOs, government institutions, and SMEs. Topics include:</p>
+                <ul>
+                    <li>Financial management</li>
+                    <li>Strategic planning</li>
+                    <li>Leadership</li>
+                    <li>Public policy</li>
+                    <li>Project management</li>
+                </ul>
+
+                <h3>11. Community Features</h3>
+                <ul>
+                    <li>Student discussion forums</li>
+                    <li>Q&A platform</li>
+                    <li>Study groups</li>
+                    <li>Academic blogs</li>
+                    <li>Success stories</li>
+                    <li>Webinar center</li>
+                </ul>
+
+                <h3>Essential Website Pages</h3>
+                <ul>
+                    <li>Home</li>
+                    <li>About Us</li>
+                    <li>Courses</li>
+                    <li>Tutors</li>
+                    <li>Learning Resources</li>
+                    <li>Research Support</li>
+                    <li>Career Services</li>
+                    <li>Blog</li>
+                    <li>Student Portal</li>
+                    <li>Pricing</li>
+                    <li>Contact Us</li>
+                    <li>FAQs</li>
+                </ul>
+
+                <h3>Recommended Revenue Streams</h3>
+                <ul>
+                    <li>Live Classes — Subscription</li>
+                    <li>One-on-One Tutoring — Hourly Rate</li>
+                    <li>Professional Courses — Course Fee</li>
+                    <li>Research Training — Workshop Fee</li>
+                    <li>Premium Resources — Membership</li>
+                    <li>Corporate Training — Contract-Based</li>
+                    <li>Career Services — Service Fee</li>
+                    <li>Certification Programs — Examination Fee</li>
+                </ul>
+
+                <h3>Suggested Tagline</h3>
+                <p><em>"Your Partner in Academic and Professional Excellence."</em></p>
+                <p>Position the platform as an <strong>Academic Excellence and Professional Development Centre</strong> to attract students, researchers, professionals, schools, and organizations.</p>
+                </div>
+                `;
+            }
+
+        function renderStudentDashboard() {
+            if(!currentUser || currentUser.role !== 'student') return `<div class="card"><h3>🔐 Please login as student</h3><button id="showStudLogin" class="btn btn-primary">Student Login</button></div>`;
+            let mats = getMaterials().slice(0,3);
+            let assigns = getAssignments().filter(a=>a.dueDate >= new Date().toISOString().slice(0,10)).slice(0,3);
+            let ann = getAnnouncements().slice(0,2);
+            let live = getLiveClasses().sort((a,b)=>new Date((a.date||'') + 'T' + (a.time||'00:00')) - new Date((b.date||'') + 'T' + (b.time||'00:00')));
+            return `<div class="card"><h2>👋 Welcome, ${currentUser.name}</h2><div class="stat-grid"><div class="stat-card">📚 ${getMaterials().length} Materials</div><div class="stat-card">📝 ${getAssignments().length} Total Assigned</div></div></div>
+            <div class="card"><h3>📢 Recent Announcements</h3>${ann.map(a=>`<p><strong>${a.title}</strong> - ${a.date}</p>`).join('')||'None'}</div>
+            <div class="card"><h3>📋 Upcoming Assignments</h3>${assigns.map(a=>`<p>📌 ${a.title} (Due ${a.dueDate})</p>`).join('')||'No upcoming'}</div>
+            <div class="card"><h3>🎥 Upcoming Live</h3>${live.length ? live.map(l => `<div class="card" style="margin-bottom:12px;"><h4>${escapeHtml(l.title)}</h4><p>📅 ${l.date || 'TBA'} at ${l.time || 'TBA'}${l.platform ? ' • ' + escapeHtml(l.platform) : ''}</p><p>${escapeHtml(l.duration ? `${l.duration} min` : 'Duration not set')}</p>${l.link ? `<a href="${escapeHtml(l.link)}" target="_blank" class="btn btn-primary">Join Class</a>` : '<span style="color:#64748b;">No meeting link yet</span>'}</div>`).join('') : '<p>No live classes yet</p>'}</div>
+            <div class="card"><h3>🤝 One-on-One Tutoring</h3>
+                <p>Request a personalised tutoring session with our tutors.</p>
+                <form id="tutoringRequestForm">
+                    <div class="form-group"><input type="text" id="tutorSubject" class="form-control" placeholder="Subject/topic (e.g., Economics: Microeconomics)" required></div>
+                    <div class="form-group"><input type="date" id="tutorDate" class="form-control" placeholder="Preferred date"></div>
+                    <div class="form-group"><input type="time" id="tutorTime" class="form-control" placeholder="Preferred time"></div>
+                    <div class="form-group"><textarea id="tutorMessage" class="form-control" rows="2" placeholder="Brief description of what you need help with"></textarea></div>
+                    <button class="btn btn-primary">Request Tutoring</button>
+                </form>
+                <hr>
+                <h4>Your Tutoring Requests</h4>
+                <div id="studentTutoringList"></div>
+            </div>
+            <div class="card"><h3>📤 Submit Work</h3>
+                <p>Upload assignments or files you'd like reviewed by tutors.</p>
+                <form id="studentSubmissionForm">
+                    <div class="form-group"><input type="text" id="subTitle" class="form-control" placeholder="Title (e.g., Assignment 1)" required></div>
+                    <div class="form-group"><textarea id="subDesc" class="form-control" rows="2" placeholder="Describe what you need help with (brief)"></textarea></div>
+                    <div class="form-group"><label>Choose file</label><input type="file" id="subFile" class="form-control"></div>
+                    <button class="btn btn-primary">Submit for Review</button>
+                </form>
+                <hr>
+                <h4>Your Submissions</h4>
+                <div id="studentSubmissionsList"></div>
+            </div>`;
+        }
+
+        function renderAdminDashboard() {
+            if(!currentUser || currentUser.role !== 'admin') return `<div class="card"><h3>⛔ Admin access required</h3><button id="showAdminLogin" class="btn btn-primary">Admin Login</button></div>`;
+            let students = getStudents();
+            let materials = getMaterials();
+            let assignments = getAssignments();
+            let announcements = getAnnouncements();
+            let live = getLiveClasses();
+            return `
+            <div class="stat-grid"><div class="stat-card">👥 ${students.length} Students</div><div class="stat-card">📚 ${materials.length} Materials</div><div class="stat-card">📝 ${assignments.length} Assignments</div><div class="stat-card">📢 ${announcements.length} Announcements</div><div class="stat-card">🎥 ${live.length} Live Classes</div></div>
+            <div class="card"><h3>📤 Upload Learning Material</h3><form id="uploadMaterialForm"><div class="form-group"><input type="text" placeholder="Title" id="matTitle" class="form-control" required></div><div class="form-group"><select id="matType"><option value="pdf">PDF</option><option value="ppt">PPT</option><option value="doc">DOC</option></select></div><div class="form-group"><label>Choose file</label><input type="file" id="matFile" class="form-control"></div><button type="submit" class="btn btn-primary">Upload</button></form><hr><h4>Existing Materials</h4><ul id="adminMaterialList"></ul></div>
+            <div class="card"><h3>📝 Assignment Management</h3><button id="newAssignmentBtn" class="btn btn-primary">+ Add Assignment</button><div id="assignmentTable" class="table-container"><table class="table" style="width:100%;"><thead><tr><th>Title</th><th>Due Date</th><th>Actions</th></tr></thead><tbody id="assignAdminBody"></tbody></table></div></div>
+            <div class="card"><h3>📢 Create Announcement</h3><form id="announceForm"><input type="text" placeholder="Title" id="annTitle" class="form-control" required><textarea placeholder="Content" id="annContent" class="form-control" rows="2"></textarea><button class="btn btn-primary">Post</button></form><hr><div id="adminAnnounceList"></div></div>
+            <div class="card"><h3>🎥 Live Class Management</h3><form id="liveClassForm"><input placeholder="Title" id="liveTitle" class="form-control"><input type="date" id="liveDate" class="form-control"><input type="time" id="liveTime" class="form-control"><input placeholder="Duration (min)" id="liveDuration" class="form-control"><select id="livePlatform" class="form-control"><option value="Zoom">Zoom</option><option value="Google Meet">Google Meet</option><option value="Other">Other</option></select><input placeholder="Meeting Link" id="liveLink" class="form-control"><label style="margin-top:8px"><input type="checkbox" id="liveIsRecorded"> Recorded</label><div class="form-group"><label>Recorded file (optional)</label><input type="file" id="liveRecordedFile" class="form-control"></div><button class="btn btn-primary">Schedule</button></form><div id="adminLiveList"></div></div>
+            <div class="card"><h3>📼 Recorded Classes</h3><form id="recordedClassForm"><div class="form-group"><input placeholder="Title" id="recTitle" class="form-control"></div><div class="form-group"><label>Choose recording file</label><input type="file" id="recFile" class="form-control"></div><button class="btn btn-primary">Upload Recording</button></form><div id="recordedList"></div></div>
+            <div class="card"><h3>🤝 Tutoring Requests</h3>
+                <p>Manage one-on-one tutoring requests from students.</p>
+                <div id="adminTutoringList"></div>
+            </div>
+            <div class="card"><h3>📥 Student Submissions</h3><div id="adminSubmissionsList"></div></div>
+            <div class="card"><h3>👨‍🎓 Registered Students</h3><p style="color:#64748b;">No registered students to display.</p></div>`;
+        }
+
+        function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+        function renderRightPanel() {
+            let annDiv = document.getElementById('rightAnnList');
+            let deadDiv = document.getElementById('rightDeadlines');
+            if(annDiv) {
+                let ann = getAnnouncements().sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,3);
+                annDiv.innerHTML = ann.map(a=>`<div class="ann-item"><strong>${escapeHtml(a.title)}</strong><div class="meta">${a.date}</div><p style="margin-top:6px;color:#334155">${escapeHtml(a.content).slice(0,120)}</p></div>`).join('') || '<div>No announcements</div>';
+            }
+            if(deadDiv) {
+                let assigns = getAssignments().filter(a=>a.dueDate).sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate)).slice(0,5);
+                deadDiv.innerHTML = assigns.map(a=>`<div class="deadline-item"><div><strong>${escapeHtml(a.title)}</strong><div style="color:#64748b;font-size:0.85rem">${a.description||''}</div></div><div style="text-align:right;color:#0f172a">${a.dueDate}</div></div>`).join('') || '<div style="padding:8px">No upcoming deadlines</div>';
+            }
+        }
+
+        // Helper: convert File to data URL (base64) fallback
+        function fileToDataUrl(file) {
+            return new Promise((res, rej) => {
+                const reader = new FileReader();
+                reader.onload = () => res(reader.result);
+                reader.onerror = rej;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Helper: upload file to Supabase Storage (bucket 'materials' or 'recordings')
+        async function uploadFileToSupabase(file, bucket = 'materials', pathPrefix = '') {
+            if(!isSupabaseEnabled()) return null;
+            try {
+                const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g,'')}`;
+                const path = (pathPrefix ? pathPrefix + '/' : '') + fileName;
+                const { data, error } = await supabaseClient.storage.from(bucket).upload(path, file, { upsert: true });
+                if(error) { console.error('Storage upload error', error); return null; }
+                const { publicUrl } = supabaseClient.storage.from(bucket).getPublicUrl(path);
+                return publicUrl;
+            } catch(err) { console.error(err); return null; }
+        }
+
+        // EVENT HANDLERS + MODAL
+        function showModal(modalId) { document.getElementById(modalId).style.display = 'flex'; }
+        function hideModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+
+        function initAdminActions() {
+            document.getElementById('uploadMaterialForm')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                let title = document.getElementById('matTitle').value;
+                let type = document.getElementById('matType').value;
+                let fileInput = document.getElementById('matFile');
+                let fileUrl = '#';
+                if(fileInput && fileInput.files && fileInput.files[0]) {
+                    const f = fileInput.files[0];
+                    if(isSupabaseEnabled()) {
+                        const uploaded = await uploadFileToSupabase(f, 'materials', 'materials');
+                        if(uploaded) fileUrl = uploaded;
+                    } else {
+                        try { fileUrl = await fileToDataUrl(f); } catch(e){ console.error(e); }
+                    }
+                }
+                let mats = getMaterials();
+                const newMat = { id: Date.now().toString(), title, uploadDate: new Date().toISOString().slice(0,10), type, fileUrl };
+                mats.push(newMat);
+                setMaterials(mats);
+                if(isSupabaseEnabled()) supabaseClient.from('materials').insert(newMat).then(({error})=>{ if(error) console.error(error); else syncFromSupabase(); });
+                renderCurrentView();
+                showNotification('Material uploaded');
+            });
+            document.getElementById('newAssignmentBtn')?.addEventListener('click', () => {
+                let title = prompt("Assignment title");
+                let desc = prompt("Description");
+                let due = prompt("Due date (YYYY-MM-DD)");
+                if(title && desc && due) {
+                    let asm = getAssignments();
+                    const newA = { id: Date.now().toString(), title, description: desc, dueDate: due, fileUrl: '#' };
+                    asm.push(newA);
+                    setAssignments(asm);
+                    if(isSupabaseEnabled()) supabaseClient.from('assignments').insert(newA).then(({error})=>{ if(error) console.error(error); else syncFromSupabase(); });
+                    renderCurrentView();
+                }
+            });
+            document.getElementById('announceForm')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                let title = document.getElementById('annTitle').value;
+                let content = document.getElementById('annContent').value;
+                let anns = getAnnouncements();
+                const newAnn = { id: Date.now().toString(), title, content, date: new Date().toISOString().slice(0,10) };
+                anns.push(newAnn);
+                setAnnouncements(anns);
+                if(isSupabaseEnabled()) supabaseClient.from('announcements').insert(newAnn).then(({error})=>{ if(error) console.error(error); else syncFromSupabase(); });
+                renderCurrentView();
+            });
+            document.getElementById('liveClassForm')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                let live = getLiveClasses();
+                let title = document.getElementById('liveTitle').value;
+                let date = document.getElementById('liveDate').value;
+                let time = document.getElementById('liveTime').value;
+                let duration = document.getElementById('liveDuration').value;
+                let platform = document.getElementById('livePlatform')?.value || 'Zoom';
+                let link = document.getElementById('liveLink').value;
+                const isRecorded = document.getElementById('liveIsRecorded')?.checked;
+                let recordedFileInput = document.getElementById('liveRecordedFile');
+                if(isRecorded && recordedFileInput && recordedFileInput.files && recordedFileInput.files[0]) {
+                    const f = recordedFileInput.files[0];
+                    if(isSupabaseEnabled()) {
+                        const uploaded = await uploadFileToSupabase(f, 'recordings', 'recordings');
+                        if(uploaded) link = uploaded;
+                    } else {
+                        try { link = await fileToDataUrl(f); } catch(e){ console.error(e); }
+                    }
+                }
+                const newLive = { id: Date.now().toString(), title, date, time, duration, platform, link, recorded: !!isRecorded };
+                live.push(newLive);
+                setLiveClasses(live);
+                if(isSupabaseEnabled()) supabaseClient.from('liveclasses').insert(newLive).then(({error})=>{ if(error) console.error(error); else syncFromSupabase(); });
+                renderCurrentView();
+            });
+
+            // Recorded classes upload
+            document.getElementById('recordedClassForm')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                let title = document.getElementById('recTitle').value;
+                let fileInput = document.getElementById('recFile');
+                if(!title || !fileInput || !fileInput.files || !fileInput.files[0]) { alert('Please provide title and file'); return; }
+                let fileUrl = '#';
+                const f = fileInput.files[0];
+                if(isSupabaseEnabled()) {
+                    const uploaded = await uploadFileToSupabase(f, 'recordings', 'recordings');
+                    if(uploaded) fileUrl = uploaded;
+                } else {
+                    try { fileUrl = await fileToDataUrl(f); } catch(e){ console.error(e); }
+                }
+                // store recorded as part of liveclasses with recorded flag
+                let live = getLiveClasses();
+                const rec = { id: Date.now().toString(), title, date: new Date().toISOString().slice(0,10), time: '', duration: 0, link: fileUrl, recorded: true };
+                live.push(rec);
+                setLiveClasses(live);
+                if(isSupabaseEnabled()) supabaseClient.from('liveclasses').insert(rec).then(({error})=>{ if(error) console.error(error); else syncFromSupabase(); });
+                renderCurrentView();
+                showNotification('Recording uploaded');
+            });
+            function refreshAdminLists() {
+                let mats = getMaterials();
+                let assign = getAssignments();
+                let ann = getAnnouncements();
+                let subs = getSubmissions();
+                let liveList = getLiveClasses();
+                let tutoring = getTutoringRequests();
+                document.getElementById('adminMaterialList') && (document.getElementById('adminMaterialList').innerHTML = mats.map(m=>`<li>${m.title} <button class="btn btn-danger btn-sm" onclick="deleteMaterial('${m.id}')">Delete</button></li>`).join(''));
+                let assignBody = document.getElementById('assignAdminBody');
+                if(assignBody) assignBody.innerHTML = assign.map(a=>`<tr><td>${a.title}</td><td>${a.dueDate}</td><td><button class="btn btn-danger" onclick="deleteAssignment('${a.id}')">Delete</button></td></tr>`).join('');
+                let adminAnnDiv = document.getElementById('adminAnnounceList');
+                if(adminAnnDiv) adminAnnDiv.innerHTML = ann.map(a=>`<div>📢 ${a.title} - ${a.date} <button class="btn btn-danger" onclick="deleteAnnouncement('${a.id}')">Delete</button></div>`).join('');
+                let adminLiveDiv = document.getElementById('adminLiveList');
+                if(adminLiveDiv) adminLiveDiv.innerHTML = liveList.map(l=>`<div>🎥 ${l.title} (${l.date} ${l.time}) <button class="btn btn-danger" onclick="deleteLiveClass('${l.id}')">Delete</button></div>`).join('');
+                let adminSubs = document.getElementById('adminSubmissionsList');
+                if(adminSubs) adminSubs.innerHTML = (subs && subs.length) ? `<table class="table"><thead><tr><th>Student</th><th>Title</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${subs.map(s=>`<tr><td>${escapeHtml(s.studentName || s.studentEmail)}</td><td>${escapeHtml(s.title)}</td><td>${s.date}</td><td>${escapeHtml(s.status||'pending')}</td><td><a href="${s.fileUrl||'#'}" target="_blank" class="btn btn-outline">View</a> <button class="btn btn-primary" onclick="markSubmissionDone('${s.id}')">Mark Done</button></td></tr>`).join('')}</tbody></table>` : '<div>No submissions</div>';
+                // Tutoring requests admin list
+                let adminTutDiv = document.getElementById('adminTutoringList');
+                if(adminTutDiv) {
+                    adminTutDiv.innerHTML = (tutoring && tutoring.length) ? `<table class="table"><thead><tr><th>Student</th><th>Subject</th><th>Preferred</th><th>Message</th><th>Status</th><th>Actions</th></tr></thead><tbody>${tutoring.map(t=>`<tr><td>${escapeHtml(t.studentName||t.studentEmail)}</td><td>${escapeHtml(t.subject)}</td><td>${t.preferredDate||''} ${t.preferredTime||''}</td><td>${escapeHtml((t.message||'').slice(0,80))}</td><td>${escapeHtml(t.status||'pending')}</td><td><a href="${t.meetingLink||'#'}" target="_blank" class="btn btn-outline">Link</a> <button class="btn btn-primary" onclick="approveTutoringRequest('${t.id}')">Approve</button> <button class="btn btn-danger" onclick="rejectTutoringRequest('${t.id}')">Reject</button> <button class="btn" onclick="assignTutoringLink('${t.id}')">Assign Link</button></td></tr>`).join('')}</tbody></table>` : '<div>No tutoring requests</div>';
+                }
+            }
+            window.markSubmissionDone = (id) => { let subs = getSubmissions(); let s = subs.find(x=>x.id===id); if(s){ s.status = 'done'; setSubmissions(subs); if(isSupabaseEnabled()) supabaseClient.from('submissions').update({status:'done'}).eq('id', id).then(()=>syncFromSupabase()); renderCurrentView(); } };
+            window.approveTutoringRequest = (id) => { let reqs = getTutoringRequests(); let r = reqs.find(x=>x.id===id); if(r){ r.status = 'approved'; setTutoringRequests(reqs); if(isSupabaseEnabled()) supabaseClient.from('tutoring_requests').update({status:'approved'}).eq('id', id).then(()=>syncFromSupabase()); renderCurrentView(); } };
+            window.rejectTutoringRequest = (id) => { let reqs = getTutoringRequests(); let r = reqs.find(x=>x.id===id); if(r){ r.status = 'rejected'; setTutoringRequests(reqs); if(isSupabaseEnabled()) supabaseClient.from('tutoring_requests').update({status:'rejected'}).eq('id', id).then(()=>syncFromSupabase()); renderCurrentView(); } };
+            window.assignTutoringLink = async (id) => {
+                let link = prompt('Enter meeting link or resource (Zoom/Meet link)');
+                if(!link) return;
+                let reqs = getTutoringRequests(); let r = reqs.find(x=>x.id===id);
+                if(r){ r.meetingLink = link; r.tutorAssigned = r.tutorAssigned || 'Assigned'; r.status = 'approved'; setTutoringRequests(reqs); if(isSupabaseEnabled()) supabaseClient.from('tutoring_requests').update({meetingLink:link,status:'approved'}).eq('id', id).then(()=>syncFromSupabase()); renderCurrentView(); }
+            };
+            window.deleteMaterial = (id) => { if(isSupabaseEnabled()) supabaseClient.from('materials').delete().eq('id', id).then(({error})=>{ if(error) console.error(error); syncFromSupabase(); }); let m = getMaterials().filter(i=>i.id != id); setMaterials(m); renderCurrentView(); };
+            window.deleteAssignment = (id) => { if(isSupabaseEnabled()) supabaseClient.from('assignments').delete().eq('id', id).then(({error})=>{ if(error) console.error(error); syncFromSupabase(); }); let a = getAssignments().filter(i=>i.id != id); setAssignments(a); renderCurrentView(); };
+            window.deleteAnnouncement = (id) => { if(isSupabaseEnabled()) supabaseClient.from('announcements').delete().eq('id', id).then(({error})=>{ if(error) console.error(error); syncFromSupabase(); }); let an = getAnnouncements().filter(i=>i.id != id); setAnnouncements(an); renderCurrentView(); };
+            window.deleteLiveClass = (id) => { if(isSupabaseEnabled()) supabaseClient.from('liveclasses').delete().eq('id', id).then(({error})=>{ if(error) console.error(error); syncFromSupabase(); }); let l = getLiveClasses().filter(i=>i.id != id); setLiveClasses(l); renderCurrentView(); };
+            setTimeout(refreshAdminLists, 100);
+        }
+
+        function initStudentActions() {
+            document.getElementById('studentSubmissionForm')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('subTitle').value;
+                const desc = document.getElementById('subDesc').value;
+                const fileInput = document.getElementById('subFile');
+                let fileUrl = '#';
+                if(fileInput && fileInput.files && fileInput.files[0]) {
+                    const f = fileInput.files[0];
+                    if(isSupabaseEnabled()) {
+                        const uploaded = await uploadFileToSupabase(f, 'submissions', 'submissions');
+                        if(uploaded) fileUrl = uploaded;
+                    } else {
+                        try { fileUrl = await fileToDataUrl(f); } catch(err){ console.error(err); }
+                    }
+                }
+                const subs = getSubmissions();
+                const newSub = { id: Date.now().toString(), studentName: currentUser.name, studentEmail: currentUser.email, title, description: desc, fileUrl, date: new Date().toISOString().slice(0,10), status: 'pending' };
+                subs.push(newSub);
+                setSubmissions(subs);
+                if(isSupabaseEnabled()) supabaseClient.from('submissions').insert(newSub).then(({error})=>{ if(error) console.error(error); else syncFromSupabase(); });
+                renderCurrentView();
+                showNotification('Submission sent for review');
+            });
+
+            function refreshStudentList() {
+                const list = document.getElementById('studentSubmissionsList');
+                if(!list) return;
+                const subs = getSubmissions().filter(s => s.studentEmail === currentUser.email);
+                if(!subs.length) { list.innerHTML = '<div>No submissions yet</div>'; return; }
+                list.innerHTML = subs.map(s => `<div class="card"><div class="flex-between"><div><strong>${escapeHtml(s.title)}</strong><div style="font-size:0.9rem;color:#64748b">${s.date} • ${escapeHtml(s.status)}</div></div><div><a href="${s.fileUrl||'#'}" target="_blank" class="btn btn-outline">View</a></div></div><p style="margin-top:8px">${escapeHtml(s.description||'')}</p></div>`).join('');
+            }
+            function refreshStudentTutoring() {
+                const list = document.getElementById('studentTutoringList');
+                if(!list) return;
+                const reqs = getTutoringRequests().filter(r => r.studentEmail === currentUser.email);
+                if(!reqs.length) { list.innerHTML = '<div>No tutoring requests</div>'; return; }
+                list.innerHTML = reqs.map(r => `<div class="card"><div class="flex-between"><div><strong>${escapeHtml(r.subject)}</strong><div style="font-size:0.9rem;color:#64748b">Requested: ${r.dateRequested} • ${escapeHtml(r.status||'pending')}</div></div><div>${r.meetingLink?'<a href="'+r.meetingLink+'" target="_blank" class="btn btn-outline">Join</a>':''}</div></div><p style="margin-top:8px">Preferred: ${r.preferredDate||''} ${r.preferredTime||''}<br>${escapeHtml(r.message||'')}</p></div>`).join('');
+            }
+            // tutoring request form
+            document.getElementById('tutoringRequestForm')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const subject = document.getElementById('tutorSubject').value;
+                const preferredDate = document.getElementById('tutorDate').value;
+                const preferredTime = document.getElementById('tutorTime').value;
+                const message = document.getElementById('tutorMessage').value;
+                const reqs = getTutoringRequests();
+                const newReq = { id: Date.now().toString(), studentName: currentUser.name, studentEmail: currentUser.email, subject, preferredDate, preferredTime, message, status: 'pending', tutorAssigned: null, meetingLink: null, dateRequested: new Date().toISOString().slice(0,10) };
+                reqs.push(newReq);
+                setTutoringRequests(reqs);
+                if(isSupabaseEnabled()) supabaseClient.from('tutoring_requests').insert(newReq).then(({error})=>{ if(error) console.error(error); else syncFromSupabase(); });
+                renderCurrentView();
+                showNotification('Tutoring request submitted');
+            });
+            setTimeout(refreshStudentList, 80);
+            setTimeout(refreshStudentTutoring, 80);
+        }
+
+        function renderCurrentView() {
+            let container = document.getElementById('viewContainer');
+            if(currentView === 'home') container.innerHTML = renderHome();
+            else if(currentView === 'services') container.innerHTML = renderServices();
+            else if(currentView === 'materials') container.innerHTML = renderMaterials();
+            else if(currentView === 'assignments') container.innerHTML = renderAssignments();
+            else if(currentView === 'announcements') container.innerHTML = renderAnnouncements();
+            else if(currentView === 'live') container.innerHTML = renderLiveClasses();
+            else if(currentView === 'studentDashboard') { container.innerHTML = renderStudentDashboard(); initStudentActions(); }
+            else if(currentView === 'adminDashboard') { container.innerHTML = renderAdminDashboard(); initAdminActions(); }
+            attachViewScripts();
+            renderRightPanel();
+        }
+
+        function attachViewScripts() {
+            document.getElementById('quickStudentLogin')?.addEventListener('click', () => showModal('studentLoginModal'));
+            document.getElementById('quickAdminLogin')?.addEventListener('click', () => showModal('adminLoginModal'));
+            document.getElementById('showStudLogin')?.addEventListener('click', () => showModal('studentLoginModal'));
+            document.getElementById('showAdminLogin')?.addEventListener('click', () => showModal('adminLoginModal'));
+            document.getElementById('togglePass')?.addEventListener('click', () => { let p = document.getElementById('adminPassword'); p.type = p.type === 'password' ? 'text' : 'password'; });
+            document.getElementById('sidebarStudentLogin')?.addEventListener('click', (e)=>{ e.preventDefault(); showModal('studentLoginModal'); });
+            document.getElementById('sidebarTheme')?.addEventListener('click', ()=>{ document.body.classList.toggle('dark'); });
+            document.getElementById('sidebarLogout')?.addEventListener('click', ()=>{ document.getElementById('logoutBtn')?.click(); });
+        }
+
+        function updateNavByRole() {
+            let isAdmin = currentUser?.role === 'admin';
+            let isStudent = currentUser?.role === 'student';
+            let loggedIn = !!currentUser;
+            document.getElementById('studentLoginBtn').style.display = loggedIn ? 'none' : 'inline-block';
+            document.getElementById('adminLoginBtn').style.display = loggedIn ? 'none' : 'inline-block';
+            document.getElementById('logoutBtn').style.display = loggedIn ? 'inline-block' : 'none';
+            document.getElementById('sidebarLogout') && (document.getElementById('sidebarLogout').style.display = loggedIn ? 'block' : 'none');
+            document.getElementById('sidebarStudentLogin') && (document.getElementById('sidebarStudentLogin').style.display = loggedIn ? 'none' : 'block');
+            if(isAdmin) document.getElementById('adminPanelNav').style.display = 'inline-block';
+            else document.getElementById('adminPanelNav').style.display = 'none';
+            if(loggedIn) document.getElementById('studentDashNav').style.display = 'inline-block';
+            else document.getElementById('studentDashNav').style.display = 'none';
+            // update sidebar user pill
+            let userPill = document.querySelector('.sidebar .user-pill');
+            if(userPill) {
+                userPill.innerHTML = `<div style="width:36px;height:36px;border-radius:50%;background:#1e293b;color:#fff;display:flex;align-items:center;justify-content:center;">${currentUser?currentUser.name?.charAt(0).toUpperCase():'G'}</div><div><div style="font-weight:700">${currentUser?currentUser.name:'Guest'}</div><div style="font-size:0.85rem;color:#cfe6ff">${currentUser?currentUser.role:'Student'}</div></div>`;
+            }
+        }
+
+        function showNotification(msg) { alert(msg); }
+
+        // LOGIC
+        document.getElementById('studentLoginForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            let name = document.getElementById('studentName').value;
+            let email = document.getElementById('studentEmail').value;
+            if(name && email) {
+                registerStudent(name, email);
+                currentUser = { role: 'student', name, email };
+                sessionStorage.setItem('lms_user', JSON.stringify(currentUser));
+                hideModal('studentLoginModal');
+                currentView = 'studentDashboard';
+                renderCurrentView();
+                updateNavByRole();
+                showNotification(`Welcome ${name}`);
+            }
+        });
+        // apply social links on load
+        setTimeout(()=>{ try{ applySocialLinks(); }catch(e){} }, 60);
+        document.getElementById('adminLoginForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            let user = document.getElementById('adminUsername').value;
+            let pass = document.getElementById('adminPassword').value;
+            let authenticated = false;
+            // If Supabase is enabled and an 'admins' table exists, try remote check
+            if(isSupabaseEnabled()) {
+                try {
+                    let { data, error } = await supabaseClient.from('admins').select('*').ilike('username', user).eq('password', pass).limit(1);
+                    if(!error && data && data.length) authenticated = true;
+                } catch(err) { console.error('Supabase admin check error', err); }
+            }
+            // Fallback to a built-in admin credential
+            if(!authenticated) {
+                if(user && pass && (user.toLowerCase() === 'mr kibe' || user.toLowerCase() === 'mrkibe' || user.toLowerCase() === 'mr kibe'.replace(/\s+/g,'') ) && pass === 'kibe@123') authenticated = true;
+            }
+            if(authenticated) {
+                currentUser = { role: 'admin', name: 'Mr Kibe' };
+                sessionStorage.setItem('lms_user', JSON.stringify(currentUser));
+                hideModal('adminLoginModal');
+                currentView = 'adminDashboard';
+                renderCurrentView();
+                updateNavByRole();
+            } else alert('Invalid admin credentials');
+        });
+        document.getElementById('logoutBtn')?.addEventListener('click', () => { currentUser = null; sessionStorage.removeItem('lms_user'); currentView = 'home'; renderCurrentView(); updateNavByRole(); });
+        document.querySelectorAll('[data-view]').forEach(link => {
+            link.addEventListener('click', (e) => { e.preventDefault(); let view = link.dataset.view; if(view === 'adminDashboard' && (!currentUser || currentUser.role !== 'admin')) { showModal('adminLoginModal'); return; } if(view === 'studentDashboard' && (!currentUser || currentUser.role !== 'student')) { showModal('studentLoginModal'); return; } currentView = view; renderCurrentView(); updateNavByRole(); });
+        });
+        document.getElementById('studentLoginBtn')?.addEventListener('click', (e) => { e.preventDefault(); showModal('studentLoginModal'); });
+        document.getElementById('adminLoginBtn')?.addEventListener('click', (e) => { e.preventDefault(); showModal('adminLoginModal'); });
+        document.getElementById('darkModeToggle')?.addEventListener('click', () => { document.body.classList.toggle('dark'); });
+        // initial load
+        let savedUser = sessionStorage.getItem('lms_user');
+        if(savedUser) currentUser = JSON.parse(savedUser);
+        updateNavByRole();
+        renderCurrentView();
+        try{ applySocialLinks(); }catch(e){}
+        // mobile menu
+        document.getElementById('menuIcon')?.addEventListener('click', () => { document.getElementById('navLinks').classList.toggle('show'); });
+    </script>
+</body>
+</html>
